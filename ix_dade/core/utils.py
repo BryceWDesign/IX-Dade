@@ -1,32 +1,36 @@
 """
-IX-Dade Utilities Module
+IX-Dade Utility Functions
 
-Provides helper functions for IX-Dade biology and medicine operations.
+Provides support for text cleaning and input validation
+for biomedical knowledge queries.
 """
 
 import re
 
-def clean_query(query: str) -> str:
+def normalize_query(text: str) -> str:
     """
-    Cleans input query by removing extra whitespace and special characters.
+    Clean and normalize user input query.
     """
-    query = query.strip()
-    query = re.sub(r'\s+', ' ', query)
-    return query
+    text = text.strip()
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[^\w\s\-]', '', text)
+    return text.lower()
 
-def is_valid_query(query: str) -> bool:
+def is_valid_query(text: str) -> bool:
     """
-    Basic validation to check if query is meaningful.
+    Basic validation to ensure query is non-empty and plausible.
     """
-    return bool(query and len(query) > 2)
+    return bool(text and len(text) > 5 and any(c.isalpha() for c in text))
 
 # Example usage
 if __name__ == "__main__":
-    test_queries = [
-        "   What is DNA?   ",
-        "???",
+    queries = [
+        "   What is heart?? ",
         "",
-        "Tell me about mitochondria"
+        "??",
+        "Tell me about neurons"
     ]
-    for q in test_queries:
-        print(f"'{q}' -> Cleaned: '{clean_query(q)}', Valid: {is_valid_query(q)}")
+    for q in queries:
+        cleaned = normalize_query(q)
+        valid = is_valid_query(cleaned)
+        print(f"Original: '{q}' | Cleaned: '{cleaned}' | Valid: {valid}")
