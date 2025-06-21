@@ -1,27 +1,54 @@
 """
 IX-Dade Core Module
 
-Processes biology and medical queries, interfacing with IX-Gibson
-through the GibsonAdapter to provide expert domain responses.
+Handles loading and querying specialized biology and medicine knowledge bases,
+serving as the medical reasoning engine for IX-Gibson system.
 """
 
-from .gibson_adapter import GibsonAdapter
+import json
+from typing import Optional
 
 class DadeCore:
-    def __init__(self):
-        self.gibson = GibsonAdapter()
-
-    def handle_query(self, query: str) -> str:
+    def __init__(self, knowledge_base_path: str):
         """
-        Send a medical or biology query to IX-Gibson and retrieve response.
+        Initialize DadeCore with path to the medical knowledge base JSON.
 
         Args:
-            query (str): User input related to biology or medicine.
+            knowledge_base_path (str): Path to medical knowledge JSON file.
+        """
+        self.knowledge_base_path = knowledge_base_path
+        self.knowledge_base = self._load_knowledge_base()
+
+    def _load_knowledge_base(self) -> dict:
+        """
+        Load medical knowledge base JSON into memory.
 
         Returns:
-            str: Response from IX-Gibson or error message.
+            dict: Loaded medical knowledge data.
         """
-        response = self.gibson.query_gibson(query)
-        if "error" in response:
-            return f"[Dade Error] {response['error']}"
-        return response.get("answer", "[Dade] No answer available.")
+        try:
+            with open(self.knowledge_base_path, 'r', encoding='utf-8') as kb_file:
+                data = json.load(kb_file)
+            return data
+        except FileNotFoundError:
+            print(f"Knowledge base file not found at {self.knowledge_base_path}")
+            return {}
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from {self.knowledge_base_path}")
+            return {}
+
+    def query(self, question: str) -> Optional[str]:
+        """
+        Basic keyword search query interface against loaded knowledge base.
+
+        Args:
+            question (str): User question string.
+
+        Returns:
+            Optional[str]: Best matched answer or None if not found.
+        """
+        question = question.lower()
+        for key, answer in self.knowledge_base.items():
+            if key.lower() in question:
+                return answer
+        return None
